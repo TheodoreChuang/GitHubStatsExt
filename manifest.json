@@ -1,6 +1,19 @@
 {
     "name": "GitHub Stats",
     "version": "1.0",
-    "description": "Snapshot of my GitHub Stats. Get those green squares!",
-    "manifest_version": 2
+    "manifest_version": 2,
+    "description": "Snapshot of your GitHub Stats. Code daily and get those green squares!",
+    "icon": {},
+    "background": {
+      "scripts": ["background.js"],
+      "persistent": false
+    },
+    "browser_action": {
+      "default-icon": "icon.png",
+      "default-title": "Check GitHub Stats",
+      "default_popup": "popup.html"
+    },    
+    "permissions": ["storage",
+      "https://api.github.com/*"]
   }
+  
