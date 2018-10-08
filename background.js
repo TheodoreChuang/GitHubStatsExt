@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function builtGet() {
   var gitUser = document.getElementById("gitUser").value;
   var url = `https://api.github.com/users/${gitUser}/repos`;
+  // https://api.github.com/repos/TheodoreChuang/TC-Portfolio/commits?since=2018-09-24T16:00:49Z
   //   "https://api.github.com/repos/TheodoreChuang/TC-Portfolio/stats/contributors";
   httpGetAsync(url, processResponse);
 }
@@ -42,6 +43,9 @@ function responseOutput(gitStats) {
   gitStats.innerHTML = gitStats;
   document.body.appendChild(gitStats);
 }
+
+// GET list of repos
+// Get list of commits since xxx hours for each repo?
 
 // chrome.storage username?
 // chrome.browserAction.setBadgeText(object details, function callback)
