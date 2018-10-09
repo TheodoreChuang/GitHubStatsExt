@@ -1,21 +1,42 @@
+// Unauthenticated GitHub API limit 60 per hour
+
+let commitsPerEachRepo = [];
+
 // add event listener to 'Get Stats!' button
 document.addEventListener("DOMContentLoaded", function() {
-  var gitButton = document.getElementById("gitButton");
-  gitButton.addEventListener("click", () => builtGet());
+  let gitButton = document.getElementById("gitButton");
+  // FIXME - handle async callback
+  gitButton.addEventListener("click", () => responseOutput(builtGetUrl()));
 });
 
+// function builtGetUrl() {
+//   setTimeout(function() {
+//     console.log("get");
+//     commitsPerEachRepo = [[], [], [], [], [{ a: 1 }, { b: 2 }]];
+//     console.log(commitsPerEachRepo);
+//     return commitsPerEachRepo;
+//   }, 5000);
+// }
+
+// function responseOutput(data) {
+//   console.log("res");
+//   console.log(commitsPerEachRepo);
+//   let total = data.flat().length;
+//   console.log("res2");
+//   let gitStats = document.getElementById("gitStats");
+//   gitStats.innerHTML = `Your total GitHub commits in the last 24 hours: ${total}`;
+// }
+
 // REPOS - build GET request to GitHub API
-function builtGet() {
-  var gitUser = document.getElementById("gitUser").value;
-  var url = `https://api.github.com/users/${gitUser}/repos`;
-  // https://api.github.com/repos/TheodoreChuang/TC-Portfolio/commits?since=2018-09-24T16:00:49Z
-  //   "https://api.github.com/repos/TheodoreChuang/TC-Portfolio/stats/contributors";
+function builtGetUrl() {
+  let gitUser = document.getElementById("gitUser").value;
+  let url = `https://api.github.com/users/${gitUser}/repos`;
   httpGetAsync(url, processResponse);
 }
 
 // REPOS - GET request to GitHub API
 function httpGetAsync(url, processResponse) {
-  var xmlHttp = new XMLHttpRequest();
+  let xmlHttp = new XMLHttpRequest();
   xmlHttp.onreadystatechange = function() {
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
       processResponse(xmlHttp.responseText);
@@ -29,40 +50,51 @@ function processResponse(res) {
   let parseRes = JSON.parse(res);
   let repos = [];
   parseRes.forEach(e => repos.push(e["name"]));
-  // console.log(repos);
-
-  // gitStats = gitStats.length;
-  // responseOutput(gitStats);
+  builtGetUrlCommits(repos);
 }
 
-// // COMMITS - build GET request to GitHub API
-// function builtGet() {
-//   var gitUser = document.getElementById("gitUser").value;
-//   var url = `https://api.github.com/users/${gitUser}/repos`;
-//   // https://api.github.com/repos/TheodoreChuang/TC-Portfolio/commits?since=2018-09-24T16:00:49Z
-//   //   "https://api.github.com/repos/TheodoreChuang/TC-Portfolio/stats/contributors";
-//   httpGetAsync(url, processResponse);
-// }
+// COMMITS - build GET request to GitHub API
+function builtGetUrlCommits(repos, days) {
+  let gitUser = document.getElementById("gitUser").value;
+  let sinceDate = timeSinceDay(days);
+  repos.forEach(function(repo) {
+    let url = `https://api.github.com/repos/${gitUser}/${repo}/commits?since=${sinceDate}`;
+    httpGetAsyncCommits(url, processResponseCommits);
+  });
+}
 
-// // COMMITS - GET request to GitHub API
-// function httpGetAsync(url, processResponse) {
-//   var xmlHttp = new XMLHttpRequest();
-//   xmlHttp.onreadystatechange = function() {
-//     if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-//       processResponse(xmlHttp.responseText);
-//   };
-//   xmlHttp.open("GET", url, true);
-//   xmlHttp.send(null);
-// }
+// COMMITS - GET request to GitHub API
+function httpGetAsyncCommits(url, processResponseCommits) {
+  let xmlHttp = new XMLHttpRequest();
+  xmlHttp.onreadystatechange = function() {
+    if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+      processResponseCommits(xmlHttp.responseText);
+  };
+  xmlHttp.open("GET", url, true);
+  xmlHttp.send(null);
+}
 
-// // COMMITS - output stats data to popup
-// function responseOutput(gitStats) {
-//   var gitStats = document.getElementById("gitStats");
-//   gitStats.innerHTML = gitStats;
-// }
+// COMMITS - process GitHub Response
+function processResponseCommits(res) {
+  let parseRes = JSON.parse(res);
+  console.log("Process=====");
+  // console.log(parseRes);
+  commitsPerEachRepo.push(parseRes);
+}
 
-// DONE: GET list of repos
-// Get list of commits since xxx hours for each repo?
+// output stats data to popup
+function responseOutput(commitsPerEachRepo) {
+  console.log("resOutput=====");
+  console.log(commitsPerEachRepo);
+  let totalCommits = commitsPerEachRepo.flat().length;
+  console.log("TotalCommits=====");
+  console.log(totalCommits);
+  let gitStats = document.getElementById("gitStats");
+  gitStats.innerHTML = `Your total GitHub commits in the last 24 hours: ${totalCommits}`;
+}
 
-// chrome.storage username?
-// chrome.browserAction.setBadgeText(object details, function callback)
+function timeSinceDay(days = 1) {
+  const millisecondsPerDay = 86400000;
+  let dayAgo = new Date(new Date() - days * millisecondsPerDay);
+  return dayAgo.toISOString();
+}
