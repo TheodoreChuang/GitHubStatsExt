@@ -1,0 +1,23 @@
+body {
+    width: 200px;
+}
+
+#gitUser {}
+
+#gitButton {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 3px 6px;
+    margin: 0 2px;
+    text-align: center;
+}
+
+#gitStats {
+    padding: 5px 0;
+}
+
+#lastChecked{
+    font-size: 0.7em;
+    color: #999;
+}

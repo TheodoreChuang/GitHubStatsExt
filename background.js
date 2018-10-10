@@ -2,33 +2,20 @@
 
 let commitsPerEachRepo = [];
 
-// add event listener to 'Get Stats!' button
 document.addEventListener("DOMContentLoaded", function() {
+  loadUser();
+  loadCommits();
+  loadLastCheck();
+  // add event listener to 'Get Stats!' button
   let gitButton = document.getElementById("gitButton");
   // FIXME - handle async callback - temporarily patched with setTimeout
   gitButton.addEventListener("click", function() {
-    commitsPerEachRepo = [];
-    builtGetUrl(responseOutput(commitsPerEachRepo));
+    if (gitUser.value != "") {
+      commitsPerEachRepo = [];
+      builtGetUrl(responseOutput(commitsPerEachRepo));
+    }
   });
 });
-
-// function builtGetUrl() {
-//   setTimeout(function() {
-//     console.log("get");
-//     commitsPerEachRepo = [[], [], [], [], [{ a: 1 }, { b: 2 }]];
-//     console.log(commitsPerEachRepo);
-//     return commitsPerEachRepo;
-//   }, 5000);
-// }
-
-// function responseOutput(data) {
-//   console.log("res");
-//   console.log(commitsPerEachRepo);
-//   let total = data.flat().length;
-//   console.log("res2");
-//   let gitStats = document.getElementById("gitStats");
-//   gitStats.innerHTML = `Your total GitHub commits in the last 24 hours: ${total}`;
-// }
 
 // REPOS - build GET request to GitHub API
 function builtGetUrl() {
@@ -41,6 +28,10 @@ function builtGetUrl() {
 function httpGetAsync(url, processResponse) {
   let xmlHttp = new XMLHttpRequest();
   xmlHttp.onreadystatechange = function() {
+    // if (xmlHttp.status == 403 || xmlHttp.status == 404) {
+    //   let gitStats = document.getElementById("gitStats");
+    //   gitStats.innerHTML = `Hourly API Limit Reached!`;
+    // }
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
       processResponse(xmlHttp.responseText);
   };
@@ -70,6 +61,10 @@ function builtGetUrlCommits(repos, days) {
 function httpGetAsyncCommits(url, processResponseCommits) {
   let xmlHttp = new XMLHttpRequest();
   xmlHttp.onreadystatechange = function() {
+    // if (xmlHttp.status == 403 || xmlHttp.status == 404) {
+    //   let gitStats = document.getElementById("gitStats");
+    //   gitStats.innerHTML = `Hourly API Limit Reached!`;
+    // }
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
       processResponseCommits(xmlHttp.responseText);
   };
@@ -91,8 +86,17 @@ function responseOutput(commitsPerEachRepo) {
     console.log("resOutput=====");
     let totalCommits = commitsPerEachRepo.flat().length;
     let gitStats = document.getElementById("gitStats");
-    gitStats.innerHTML = `Your total GitHub commits in the last 24 hours: ${totalCommits}`;
-  }, 10000);
+    gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
+
+    let lastChecked = document.getElementById("lastChecked");
+    let timeNow = new Date().toLocaleTimeString();
+    lastChecked.innerHTML = `${timeNow}`;
+
+    let gitUser = document.getElementById("gitUser").value;
+    saveUser(gitUser);
+    saveCommits(totalCommits);
+    saveLastCheck(timeNow);
+  }, 8000);
 }
 
 function timeSinceDay(days = 1) {
@@ -100,3 +104,79 @@ function timeSinceDay(days = 1) {
   let dayAgo = new Date(new Date() - days * millisecondsPerDay);
   return dayAgo.toISOString();
 }
+
+// Save sync/local data
+function saveUser(value) {
+  chrome.storage.sync.set({ storeUsername: value }, function() {
+    console.log(`storeUsername: ${value}`);
+  });
+}
+function saveCommits(value) {
+  chrome.storage.sync.set({ storeCommits: value }, function() {
+    console.log(`storeCommits: ${value}`);
+  });
+}
+function saveLastCheck(value) {
+  chrome.storage.sync.set({ storeLastChecked: value }, function() {
+    console.log(`storeLastChecked: ${value}`);
+  });
+}
+
+// Load saved sync/local data
+function loadUser() {
+  chrome.storage.sync.get("storeUsername", function(result) {
+    console.log("storeUsername currently is " + result.storeUsername);
+    if (result.storeUsername != undefined) {
+      let gitUser = document.getElementById("gitUser");
+      gitUser.value = result.storeUsername;
+    }
+  });
+}
+function loadCommits() {
+  chrome.storage.sync.get("storeCommits", function(result) {
+    console.log("storeCommits currently is " + result.storeCommits);
+    if (result.storeCommits != undefined) {
+      let gitStats = document.getElementById("gitStats");
+      gitStats.innerHTML = `Commits last 24 hours: <strong>${
+        result.storeCommits
+      }</strong>`;
+    }
+  });
+}
+function loadLastCheck() {
+  chrome.storage.sync.get("storeLastChecked", function(result) {
+    console.log("storeLastChecked currently is " + result.storeLastChecked);
+    if (result.storeLastChecked != undefined) {
+      let lastChecked = document.getElementById("lastChecked");
+      lastChecked.innerHTML = result.storeLastChecked;
+    }
+  });
+}
+
+// // For Testing:
+// function builtGetUrl() {
+//   setTimeout(function() {
+//     console.log("get");
+//     commitsPerEachRepo = [[], [], [], [], [{ a: 1 }, { b: 2 }]];
+//     console.log(commitsPerEachRepo);
+//   }, 1000);
+// }
+// function responseOutput() {
+//   setTimeout(function() {
+//     console.log("res");
+//     console.log(commitsPerEachRepo);
+//     let totalCommits = commitsPerEachRepo.flat().length;
+//     console.log("res2");
+//     let gitStats = document.getElementById("gitStats");
+//     gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
+
+//     let lastChecked = document.getElementById("lastChecked");
+//     let timeNow = new Date().toLocaleTimeString();
+//     lastChecked.innerHTML = `${timeNow}`;
+
+//     let gitUser = document.getElementById("gitUser").value;
+//     saveUser(gitUser);
+//     saveCommits(totalCommits);
+//     saveLastCheck(timeNow);
+//   }, 2000);
+// }
