@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
   gitButton.addEventListener("click", function() {
     if (gitUser.value != "") {
       commitsPerEachRepo = [];
-      builtGetUrl(responseOutput(commitsPerEachRepo));
+      builtGetUrl(responseOutput());
     }
   });
 });
@@ -28,10 +28,9 @@ function builtGetUrl() {
 function httpGetAsync(url, processResponse) {
   let xmlHttp = new XMLHttpRequest();
   xmlHttp.onreadystatechange = function() {
-    // if (xmlHttp.status == 403 || xmlHttp.status == 404) {
-    //   let gitStats = document.getElementById("gitStats");
-    //   gitStats.innerHTML = `Hourly API Limit Reached!`;
-    // }
+    if (xmlHttp.status == 403) {
+      commitsPerEachRepo = "apiLimitReached";
+    }
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
       processResponse(xmlHttp.responseText);
   };
@@ -61,10 +60,9 @@ function builtGetUrlCommits(repos, days) {
 function httpGetAsyncCommits(url, processResponseCommits) {
   let xmlHttp = new XMLHttpRequest();
   xmlHttp.onreadystatechange = function() {
-    // if (xmlHttp.status == 403 || xmlHttp.status == 404) {
-    //   let gitStats = document.getElementById("gitStats");
-    //   gitStats.innerHTML = `Hourly API Limit Reached!`;
-    // }
+    if (xmlHttp.status == 403) {
+      commitsPerEachRepo = "apiLimitReached";
+    }
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
       processResponseCommits(xmlHttp.responseText);
   };
@@ -81,12 +79,19 @@ function processResponseCommits(res) {
 }
 
 // output stats data to popup
-function responseOutput(commitsPerEachRepo) {
+function responseOutput() {
   setTimeout(function() {
     console.log("resOutput=====");
-    let totalCommits = commitsPerEachRepo.flat().length;
+    let totalCommits = "";
     let gitStats = document.getElementById("gitStats");
-    gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
+
+    if (commitsPerEachRepo != "apiLimitReached") {
+      totalCommits = commitsPerEachRepo.flat().length;
+      gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
+    } else {
+      totalCommits = `Hourly API Limit Reached!`;
+      gitStats.innerHTML = `<strong>${totalCommits}</strong>`;
+    }
 
     let lastChecked = document.getElementById("lastChecked");
     let timeNow = new Date().toLocaleTimeString();
@@ -135,11 +140,16 @@ function loadUser() {
 function loadCommits() {
   chrome.storage.sync.get("storeCommits", function(result) {
     console.log("storeCommits currently is " + result.storeCommits);
+    console.log(result.storeCommits);
     if (result.storeCommits != undefined) {
       let gitStats = document.getElementById("gitStats");
-      gitStats.innerHTML = `Commits last 24 hours: <strong>${
-        result.storeCommits
-      }</strong>`;
+      if (result.storeCommits != "Hourly API Limit Reached!") {
+        gitStats.innerHTML = `Commits last 24 hours: <strong>${
+          result.storeCommits
+        }</strong>`;
+      } else {
+        gitStats.innerHTML = `<strong>Hourly API Limit Reached!</strong>`;
+      }
     }
   });
 }
