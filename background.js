@@ -5,10 +5,10 @@ let commitsPerEachRepo = [];
 // add event listener to 'Get Stats!' button
 document.addEventListener("DOMContentLoaded", function() {
   let gitButton = document.getElementById("gitButton");
-  // FIXME - handle async callback
+  // FIXME - handle async callback - temporarily patched with setTimeout
   gitButton.addEventListener("click", function() {
     commitsPerEachRepo = [];
-    responseOutput(builtGetUrl());
+    builtGetUrl(responseOutput(commitsPerEachRepo));
   });
 });
 
@@ -81,19 +81,18 @@ function httpGetAsyncCommits(url, processResponseCommits) {
 function processResponseCommits(res) {
   let parseRes = JSON.parse(res);
   console.log("Process=====");
-  // console.log(parseRes);
   commitsPerEachRepo.push(parseRes);
+  console.log(commitsPerEachRepo);
 }
 
 // output stats data to popup
 function responseOutput(commitsPerEachRepo) {
-  console.log("resOutput=====");
-  console.log(commitsPerEachRepo);
-  let totalCommits = commitsPerEachRepo.flat().length;
-  console.log("TotalCommits=====");
-  console.log(totalCommits);
-  let gitStats = document.getElementById("gitStats");
-  gitStats.innerHTML = `Your total GitHub commits in the last 24 hours: ${totalCommits}`;
+  setTimeout(function() {
+    console.log("resOutput=====");
+    let totalCommits = commitsPerEachRepo.flat().length;
+    let gitStats = document.getElementById("gitStats");
+    gitStats.innerHTML = `Your total GitHub commits in the last 24 hours: ${totalCommits}`;
+  }, 10000);
 }
 
 function timeSinceDay(days = 1) {
