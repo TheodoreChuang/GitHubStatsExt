@@ -6,7 +6,10 @@ let commitsPerEachRepo = [];
 document.addEventListener("DOMContentLoaded", function() {
   let gitButton = document.getElementById("gitButton");
   // FIXME - handle async callback
-  gitButton.addEventListener("click", () => responseOutput(builtGetUrl()));
+  gitButton.addEventListener("click", function() {
+    commitsPerEachRepo = [];
+    responseOutput(builtGetUrl());
+  });
 });
 
 // function builtGetUrl() {
