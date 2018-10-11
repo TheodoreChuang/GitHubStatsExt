@@ -1,11 +1,15 @@
 body {
-    width: 200px;
+    width: 250px;
 }
 
 #gitUser {}
 
+#sinceDay {
+    width: 40px;
+}
+
 #gitButton {
-    background-color: #4CAF50; /* Green */
+    background-color: #00AD42;
     border: none;
     color: white;
     padding: 3px 6px;
