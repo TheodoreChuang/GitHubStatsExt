@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function() {
   loadDays();
   loadCommits();
   loadLastCheck();
+  setBadge();
 
   let gitButton = document.getElementById("gitButton");
   gitButton.addEventListener("click", function() {
@@ -127,7 +128,7 @@ function responseOutput() {
   saveDays(days);
   saveCommits(totalCommits);
   saveLastCheck(timeNow);
-
+  setBadge();
   gitButton.removeAttribute("disabled");
 }
 
@@ -191,10 +192,12 @@ function loadCommits() {
           gitStats.innerHTML = `Commits last 24 hours: <strong>${
             result.storeCommits
           }</strong>`;
+          // setBadge(result.storeCommits);
         } else {
           gitStats.innerHTML = `Commits last ${days} days: <strong>${
             result.storeCommits
           }</strong>`;
+          // setBadge(result.storeCommits);
         }
       } else {
         gitStats.innerHTML = `<strong>Hourly API Limit Reached!</strong>`;
@@ -208,6 +211,17 @@ function loadLastCheck() {
     if (result.storeLastChecked != undefined) {
       let lastChecked = document.getElementById("lastChecked");
       lastChecked.innerHTML = result.storeLastChecked;
+    }
+  });
+}
+
+function setBadge() {
+  chrome.storage.sync.get("storeCommits", function(result) {
+    if (result.storeCommits != "Hourly API Limit Reached!") {
+      chrome.browserAction.setBadgeText({
+        text: result.storeCommits.toString()
+      });
+      chrome.browserAction.setBadgeBackgroundColor({ color: "#999999" });
     }
   });
 }
