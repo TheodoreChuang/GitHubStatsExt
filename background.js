@@ -112,12 +112,12 @@ function responseOutput() {
   if (commitsPerEachRepo != "apiLimitReached") {
     totalCommits = commitsPerEachRepo.flat().length;
     if (days == 1) {
-      gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
+      gitStats.innerHTML = `Commits over last 24 hours: <strong>${totalCommits}</strong>`;
     } else {
-      gitStats.innerHTML = `Commits last ${days} days: <strong>${totalCommits}</strong>`;
+      gitStats.innerHTML = `Commits over ${days} days: <strong>${totalCommits}</strong>`;
     }
   } else {
-    totalCommits = `Hourly API Limit Reached!`;
+    totalCommits = `Sorry! Hourly API Limit of 60 Reached`;
     gitStats.innerHTML = `<strong>${totalCommits}</strong>`;
   }
 
@@ -186,21 +186,19 @@ function loadCommits() {
     console.log("storeCommits is " + result.storeCommits);
     if (result.storeCommits != undefined) {
       let gitStats = document.getElementById("gitStats");
-      if (result.storeCommits != "Hourly API Limit Reached!") {
+      if (result.storeCommits != "Sorry! Hourly API Limit of 60 Reached") {
         let days = document.getElementById("sinceDay").value;
         if (days == 1) {
-          gitStats.innerHTML = `Commits last 24 hours: <strong>${
+          gitStats.innerHTML = `Commits over 24 hours: <strong>${
             result.storeCommits
           }</strong>`;
-          // setBadge(result.storeCommits);
         } else {
-          gitStats.innerHTML = `Commits last ${days} days: <strong>${
+          gitStats.innerHTML = `Commits over ${days} days: <strong>${
             result.storeCommits
           }</strong>`;
-          // setBadge(result.storeCommits);
         }
       } else {
-        gitStats.innerHTML = `<strong>Hourly API Limit Reached!</strong>`;
+        gitStats.innerHTML = `<strong>Sorry! Hourly API Limit of 60 Reached</strong>`;
       }
     }
   });
@@ -217,7 +215,7 @@ function loadLastCheck() {
 
 function setBadge() {
   chrome.storage.sync.get("storeCommits", function(result) {
-    if (result.storeCommits != "Hourly API Limit Reached!") {
+    if (result.storeCommits != "Sorry! Hourly API Limit of 60 Reached") {
       chrome.browserAction.setBadgeText({
         text: result.storeCommits.toString()
       });
@@ -225,31 +223,3 @@ function setBadge() {
     }
   });
 }
-
-// // For Testing:
-// function builtGetUrl() {
-//   setTimeout(function() {
-//     console.log("get");
-//     commitsPerEachRepo = [[], [], [], [], [{ a: 1 }, { b: 2 }]];
-//     console.log(commitsPerEachRepo);
-//   }, 1000);
-// }
-// function responseOutput() {
-//   setTimeout(function() {
-//     console.log("res");
-//     console.log(commitsPerEachRepo);
-//     let totalCommits = commitsPerEachRepo.flat().length;
-//     console.log("res2");
-//     let gitStats = document.getElementById("gitStats");
-//     gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
-
-//     let lastChecked = document.getElementById("lastChecked");
-//     let timeNow = new Date().toLocaleTimeString();
-//     lastChecked.innerHTML = `${timeNow}`;
-
-//     let gitUser = document.getElementById("gitUser").value;
-//     saveUser(gitUser);
-//     saveCommits(totalCommits);
-//     saveLastCheck(timeNow);
-//   }, 2000);
-// }

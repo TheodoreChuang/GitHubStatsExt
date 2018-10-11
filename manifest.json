@@ -2,7 +2,7 @@
     "name": "GitHub Stats",
     "version": "1.0",
     "manifest_version": 2,
-    "description": "Snapshot of your GitHub Stats. Code daily and get those green squares!",
+    "description": "Snapshot of your GitHub commits. No zero days, code daily and get those green squares!",
     "icons": {
       "16": "images/icon16.png",
       "48": "images/icon48.png",
