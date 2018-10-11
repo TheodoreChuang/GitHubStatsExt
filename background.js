@@ -1,4 +1,5 @@
-// Unauthenticated GitHub API limit 60 per hour
+// Unauthenticated GitHub API limit 60 requests per hour
+// API only get from public repos
 
 let commitsPerEachRepo = [];
 
@@ -6,13 +7,13 @@ document.addEventListener("DOMContentLoaded", function() {
   loadUser();
   loadCommits();
   loadLastCheck();
-  // add event listener to 'Get Stats!' button
+
   let gitButton = document.getElementById("gitButton");
-  // FIXME - handle async callback - temporarily patched with setTimeout
   gitButton.addEventListener("click", function() {
     if (gitUser.value != "") {
+      gitStats.innerHTML = `...checking...`;
       commitsPerEachRepo = [];
-      builtGetUrl(responseOutput());
+      builtGetUrl();
     }
   });
 });
@@ -29,7 +30,7 @@ function httpGetAsync(url, processResponse) {
   let xmlHttp = new XMLHttpRequest();
   xmlHttp.onreadystatechange = function() {
     if (xmlHttp.status == 403) {
-      commitsPerEachRepo = "apiLimitReached";
+      apiLimitError();
     }
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
       processResponse(xmlHttp.responseText);
@@ -50,58 +51,73 @@ function processResponse(res) {
 function builtGetUrlCommits(repos, days) {
   let gitUser = document.getElementById("gitUser").value;
   let sinceDate = timeSinceDay(days);
+  let promises = [];
   repos.forEach(function(repo) {
     let url = `https://api.github.com/repos/${gitUser}/${repo}/commits?since=${sinceDate}`;
-    httpGetAsyncCommits(url, processResponseCommits);
+    promises.push(httpGetAsyncCommits(url, processResponseCommits));
   });
+
+  Promise.all(promises)
+    .then(responses => {
+      console.log(responses);
+      responseOutput();
+    })
+    .catch(err => console.log(err));
 }
 
 // COMMITS - GET request to GitHub API
 function httpGetAsyncCommits(url, processResponseCommits) {
-  let xmlHttp = new XMLHttpRequest();
-  xmlHttp.onreadystatechange = function() {
-    if (xmlHttp.status == 403) {
-      commitsPerEachRepo = "apiLimitReached";
-    }
-    if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-      processResponseCommits(xmlHttp.responseText);
-  };
-  xmlHttp.open("GET", url, true);
-  xmlHttp.send(null);
+  return new Promise((resolve, reject) => {
+    let xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+      if (xmlHttp.status == 403) {
+        reject(apiLimitError());
+      }
+      if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        resolve(processResponseCommits(xmlHttp.responseText));
+    };
+    xmlHttp.open("GET", url, true);
+    xmlHttp.send(null);
+  });
 }
 
 // COMMITS - process GitHub Response
 function processResponseCommits(res) {
   let parseRes = JSON.parse(res);
-  console.log("Process=====");
   commitsPerEachRepo.push(parseRes);
+  console.log("Process=====");
   console.log(commitsPerEachRepo);
+  return res;
+}
+
+function apiLimitError() {
+  console.log("API Limit");
+  commitsPerEachRepo = "apiLimitReached";
+  responseOutput();
 }
 
 // output stats data to popup
 function responseOutput() {
-  setTimeout(function() {
-    console.log("resOutput=====");
-    let totalCommits = "";
-    let gitStats = document.getElementById("gitStats");
+  console.log("resOutput=====");
+  let totalCommits = "";
+  let gitStats = document.getElementById("gitStats");
 
-    if (commitsPerEachRepo != "apiLimitReached") {
-      totalCommits = commitsPerEachRepo.flat().length;
-      gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
-    } else {
-      totalCommits = `Hourly API Limit Reached!`;
-      gitStats.innerHTML = `<strong>${totalCommits}</strong>`;
-    }
+  if (commitsPerEachRepo != "apiLimitReached") {
+    totalCommits = commitsPerEachRepo.flat().length;
+    gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
+  } else {
+    totalCommits = `Hourly API Limit Reached!`;
+    gitStats.innerHTML = `<strong>${totalCommits}</strong>`;
+  }
 
-    let lastChecked = document.getElementById("lastChecked");
-    let timeNow = new Date().toLocaleTimeString();
-    lastChecked.innerHTML = `${timeNow}`;
+  let lastChecked = document.getElementById("lastChecked");
+  let timeNow = new Date().toLocaleTimeString();
+  lastChecked.innerHTML = `${timeNow}`;
 
-    let gitUser = document.getElementById("gitUser").value;
-    saveUser(gitUser);
-    saveCommits(totalCommits);
-    saveLastCheck(timeNow);
-  }, 8000);
+  let gitUser = document.getElementById("gitUser").value;
+  saveUser(gitUser);
+  saveCommits(totalCommits);
+  saveLastCheck(timeNow);
 }
 
 function timeSinceDay(days = 1) {
@@ -130,7 +146,7 @@ function saveLastCheck(value) {
 // Load saved sync/local data
 function loadUser() {
   chrome.storage.sync.get("storeUsername", function(result) {
-    console.log("storeUsername currently is " + result.storeUsername);
+    console.log("storeUsername is " + result.storeUsername);
     if (result.storeUsername != undefined) {
       let gitUser = document.getElementById("gitUser");
       gitUser.value = result.storeUsername;
@@ -139,7 +155,7 @@ function loadUser() {
 }
 function loadCommits() {
   chrome.storage.sync.get("storeCommits", function(result) {
-    console.log("storeCommits currently is " + result.storeCommits);
+    console.log("storeCommits is " + result.storeCommits);
     console.log(result.storeCommits);
     if (result.storeCommits != undefined) {
       let gitStats = document.getElementById("gitStats");
@@ -155,7 +171,7 @@ function loadCommits() {
 }
 function loadLastCheck() {
   chrome.storage.sync.get("storeLastChecked", function(result) {
-    console.log("storeLastChecked currently is " + result.storeLastChecked);
+    console.log("storeLastChecked is " + result.storeLastChecked);
     if (result.storeLastChecked != undefined) {
       let lastChecked = document.getElementById("lastChecked");
       lastChecked.innerHTML = result.storeLastChecked;
