@@ -5,6 +5,7 @@ let commitsPerEachRepo = [];
 
 document.addEventListener("DOMContentLoaded", function() {
   loadUser();
+  loadDays();
   loadCommits();
   loadLastCheck();
 
@@ -49,9 +50,10 @@ function processResponse(res) {
 }
 
 // COMMITS - build GET request to GitHub API
-function builtGetUrlCommits(repos, days) {
+function builtGetUrlCommits(repos) {
+  // (repos, days)
   let gitUser = document.getElementById("gitUser").value;
-  let sinceDate = timeSinceDay(days);
+  let sinceDate = timeSinceDay();
   let promises = [];
   repos.forEach(function(repo) {
     let url = `https://api.github.com/repos/${gitUser}/${repo}/commits?since=${sinceDate}`;
@@ -100,30 +102,38 @@ function apiLimitError() {
 // output stats data to popup
 function responseOutput() {
   console.log("resOutput=====");
-  let totalCommits = "";
+  let gitUser = document.getElementById("gitUser").value;
+  let days = document.getElementById("sinceDay").value;
   let gitStats = document.getElementById("gitStats");
+  let lastChecked = document.getElementById("lastChecked");
+  let totalCommits = "";
 
   if (commitsPerEachRepo != "apiLimitReached") {
     totalCommits = commitsPerEachRepo.flat().length;
-    gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
+    if (days == 1) {
+      gitStats.innerHTML = `Commits last 24 hours: <strong>${totalCommits}</strong>`;
+    } else {
+      gitStats.innerHTML = `Commits last ${days} days: <strong>${totalCommits}</strong>`;
+    }
   } else {
     totalCommits = `Hourly API Limit Reached!`;
     gitStats.innerHTML = `<strong>${totalCommits}</strong>`;
   }
 
-  let lastChecked = document.getElementById("lastChecked");
   let timeNow = new Date().toLocaleTimeString();
   lastChecked.innerHTML = `${timeNow}`;
 
-  let gitUser = document.getElementById("gitUser").value;
   saveUser(gitUser);
+  saveDays(days);
   saveCommits(totalCommits);
   saveLastCheck(timeNow);
 
   gitButton.removeAttribute("disabled");
 }
 
-function timeSinceDay(days = 1) {
+function timeSinceDay() {
+  let days = document.getElementById("sinceDay").value || 1;
+  console.log(days);
   const millisecondsPerDay = 86400000;
   let dayAgo = new Date(new Date() - days * millisecondsPerDay);
   return dayAgo.toISOString();
@@ -133,6 +143,11 @@ function timeSinceDay(days = 1) {
 function saveUser(value) {
   chrome.storage.sync.set({ storeUsername: value }, function() {
     console.log(`storeUsername: ${value}`);
+  });
+}
+function saveDays(value) {
+  chrome.storage.sync.set({ storeDays: value }, function() {
+    console.log(`storeDays: ${value}`);
   });
 }
 function saveCommits(value) {
@@ -156,15 +171,31 @@ function loadUser() {
     }
   });
 }
+function loadDays() {
+  chrome.storage.sync.get("storeDays", function(result) {
+    console.log("storeDays is " + result.storeDays);
+    if (result.storeDays != undefined) {
+      let days = document.getElementById("sinceDay");
+      days.value = result.storeDays;
+    }
+  });
+}
 function loadCommits() {
   chrome.storage.sync.get("storeCommits", function(result) {
     console.log("storeCommits is " + result.storeCommits);
     if (result.storeCommits != undefined) {
       let gitStats = document.getElementById("gitStats");
       if (result.storeCommits != "Hourly API Limit Reached!") {
-        gitStats.innerHTML = `Commits last 24 hours: <strong>${
-          result.storeCommits
-        }</strong>`;
+        let days = document.getElementById("sinceDay").value;
+        if (days == 1) {
+          gitStats.innerHTML = `Commits last 24 hours: <strong>${
+            result.storeCommits
+          }</strong>`;
+        } else {
+          gitStats.innerHTML = `Commits last ${days} days: <strong>${
+            result.storeCommits
+          }</strong>`;
+        }
       } else {
         gitStats.innerHTML = `<strong>Hourly API Limit Reached!</strong>`;
       }
