@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function() {
   let gitButton = document.getElementById("gitButton");
   gitButton.addEventListener("click", function() {
     if (gitUser.value != "") {
+      gitButton.setAttribute("disabled", "disabled");
       gitStats.innerHTML = `...checking...`;
       commitsPerEachRepo = [];
       builtGetUrl();
@@ -118,6 +119,8 @@ function responseOutput() {
   saveUser(gitUser);
   saveCommits(totalCommits);
   saveLastCheck(timeNow);
+
+  gitButton.removeAttribute("disabled");
 }
 
 function timeSinceDay(days = 1) {
@@ -156,7 +159,6 @@ function loadUser() {
 function loadCommits() {
   chrome.storage.sync.get("storeCommits", function(result) {
     console.log("storeCommits is " + result.storeCommits);
-    console.log(result.storeCommits);
     if (result.storeCommits != undefined) {
       let gitStats = document.getElementById("gitStats");
       if (result.storeCommits != "Hourly API Limit Reached!") {
