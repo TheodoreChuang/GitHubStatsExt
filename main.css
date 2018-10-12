@@ -1,11 +1,19 @@
 body {
     width: 250px;
+    font-family: Verdana, Geneva, sans-serif;
 }
 
-#gitUser {}
+#gitUser {
+    font-size: 12px;
+    border: 1px solid #00AD42;
+    outline: none;
+}
 
 #sinceDay {
     width: 40px;
+    border: 1px solid #00AD42;
+    outline: none;
+    font-size: 12px;
 }
 
 #gitButton {
@@ -16,12 +24,15 @@ body {
     margin: 0 2px;
     text-align: center;
 }
+#gitButton:hover {
+    background-color: #008C37;
+}
 
 #gitStats {
     padding: 5px 0;
 }
 
 #lastChecked{
-    font-size: 0.7em;
+    font-size: 10px;
     color: #999;
 }
