@@ -12,9 +12,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   let gitButton = document.getElementById("gitButton");
   gitButton.addEventListener("click", function() {
-    if (gitUser.value != "") {
+    if (gitUser.value != "" && sinceDay.value != "") {
       gitButton.setAttribute("disabled", "disabled");
-      gitStats.innerHTML = `...checking...`;
+      gitStats.innerHTML = `...scanning...`;
       commitsPerEachRepo = [];
       builtGetUrl();
     }
@@ -52,7 +52,6 @@ function processResponse(res) {
 
 // COMMITS - build GET request to GitHub API
 function builtGetUrlCommits(repos) {
-  // (repos, days)
   let gitUser = document.getElementById("gitUser").value;
   let sinceDate = timeSinceDay();
   let promises = [];
@@ -89,20 +88,20 @@ function httpGetAsyncCommits(url, processResponseCommits) {
 function processResponseCommits(res) {
   let parseRes = JSON.parse(res);
   commitsPerEachRepo.push(parseRes);
-  console.log("Process=====");
-  console.log(commitsPerEachRepo);
+  // console.log("Process=====");
+  // console.log(commitsPerEachRepo);
   return res;
 }
 
 function apiLimitError() {
-  console.log("API Limit");
+  // console.log("API Limit");
   commitsPerEachRepo = "apiLimitReached";
   responseOutput();
 }
 
 // output stats data to popup
 function responseOutput() {
-  console.log("resOutput=====");
+  // console.log("resOutput=====");
   let gitUser = document.getElementById("gitUser").value;
   let days = document.getElementById("sinceDay").value;
   let gitStats = document.getElementById("gitStats");
@@ -121,7 +120,10 @@ function responseOutput() {
     gitStats.innerHTML = `<strong>${totalCommits}</strong>`;
   }
 
-  let timeNow = new Date().toLocaleTimeString();
+  let timeNow = new Date().toLocaleTimeString("en-AUS", {
+    hour: "numeric",
+    minute: "numeric"
+  });
   lastChecked.innerHTML = `${timeNow}`;
 
   saveUser(gitUser);
@@ -133,8 +135,7 @@ function responseOutput() {
 }
 
 function timeSinceDay() {
-  let days = document.getElementById("sinceDay").value || 1;
-  console.log(days);
+  let days = document.getElementById("sinceDay").value;
   const millisecondsPerDay = 86400000;
   let dayAgo = new Date(new Date() - days * millisecondsPerDay);
   return dayAgo.toISOString();
