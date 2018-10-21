@@ -121,6 +121,8 @@ function responseOutput() {
   }
 
   let timeNow = new Date().toLocaleTimeString("en-AUS", {
+    month: "short",
+    day: "numeric",
     hour: "numeric",
     minute: "numeric"
   });
@@ -214,6 +216,7 @@ function loadLastCheck() {
   });
 }
 
+// Display and set badge
 function setBadge() {
   chrome.storage.sync.get("storeCommits", function(result) {
     if (result.storeCommits != "Sorry! Hourly API Limit of 60 Reached") {
